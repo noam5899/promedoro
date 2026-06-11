@@ -38,3 +38,4 @@ python -m http.server 8000
 ## 📄 רישיון
 
 חופשי לשימוש אישי. נבנה באהבה 🍅
+Project created with the help of Maoz Epstein.
