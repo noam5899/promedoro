@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🍅 פומודורו - טיימר למידה</title>
+  <style>
+    :root {
+      --tomato: #4caf2e;
+      --tomato-dark: #2e7d1e;
+      --leaf: #1f5e12;
+      --leaf-dark: #143f0b;
+      --bg1: #f1fbe9;
+      --bg2: #d9f2c4;
+      --text: #243018;
+      --card: #ffffff;
+      --panel: rgba(255,255,255,0.85);
+      --sidebar-bg: #ffffff;
+    }
+
+    body.dark {
+      --bg1: #16210f;
+      --bg2: #2a3b1c;
+      --text: #e7f2dc;
+      --card: #243018;
+      --panel: rgba(31,42,22,0.92);
+      --sidebar-bg: #1b2613;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", "Heebo", Arial, sans-serif;
+      background: radial-gradient(circle at 50% 0%, var(--bg1), var(--bg2));
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text);
+      padding: 24px;
+      gap: 8px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      font-size: 0.95rem;
+      opacity: 0.7;
+      margin-bottom: 12px;
+    }
+
+    /* ---- העגבניה ---- */
+    .tomato-wrap {
+      position: relative;
+      width: min(260px, 70vw);
+      height: min(250px, 67vw);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      filter: drop-shadow(0 18px 24px rgba(46, 125, 30, 0.30));
+    }
+
+    .tomato-wrap.running { animation: pulse 2.4s ease-in-out infinite; }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+
+    .tomato-wrap.done { animation: celebrate 0.6s ease-in-out 4; }
+    @keyframes celebrate {
+      0%, 100% { transform: rotate(0) scale(1); }
+      25% { transform: rotate(-6deg) scale(1.06); }
+      75% { transform: rotate(6deg) scale(1.06); }
+    }
+
+    .tomato-svg { width: 100%; height: 100%; overflow: visible; }
+
+    /* הטיימר בתוך העגבניה */
+    .timer-display {
+      position: absolute;
+      top: 56%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: clamp(2rem, 12vw, 3.2rem);
+      font-weight: 800;
+      color: #fff;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.35);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 1px;
+    }
+
+    /* ---- כרטיס הבקרה ---- */
+    .panel {
+      background: var(--panel);
+      backdrop-filter: blur(6px);
+      border-radius: 22px;
+      padding: 22px 24px;
+      box-shadow: 0 10px 30px rgba(46,125,30,0.14);
+      width: 100%;
+      max-width: 360px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .minutes-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .field {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .minutes-row label { font-weight: 600; }
+
+    .stepper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card);
+      border-radius: 14px;
+      padding: 6px;
+      box-shadow: inset 0 0 0 2px var(--bg2);
+    }
+
+    .stepper button {
+      width: 38px;
+      height: 38px;
+      border: none;
+      border-radius: 10px;
+      background: var(--bg2);
+      color: var(--tomato-dark);
+      font-size: 1.4rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .stepper button:hover { background: #c2e8a4; }
+    .stepper button:active { transform: scale(0.92); }
+
+    .stepper input {
+      width: 52px;
+      border: none;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text);
+      background: transparent;
+      outline: none;
+    }
+    /* הסתרת חצי המספר */
+    .stepper input::-webkit-outer-spin-button,
+    .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .stepper input[type=number] { -moz-appearance: textfield; }
+
+    .presets { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+    .presets button {
+      border: none;
+      background: var(--card);
+      color: var(--tomato-dark);
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: inset 0 0 0 2px var(--bg2);
+      transition: all 0.15s;
+    }
+    .presets button:hover { background: var(--bg2); }
+    .presets button.active { background: var(--tomato); color: #fff; box-shadow: none; }
+
+    .controls { display: flex; gap: 10px; }
+    .controls button {
+      flex: 1;
+      border: none;
+      border-radius: 14px;
+      padding: 14px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.1s, filter 0.15s;
+    }
+    .controls button:active { transform: scale(0.96); }
+
+    .btn-primary { background: var(--tomato); color: #fff; }
+    .btn-primary:hover { filter: brightness(1.06); }
+    .btn-secondary { background: var(--card); color: var(--tomato-dark); box-shadow: inset 0 0 0 2px var(--bg2); }
+    .btn-secondary:hover { background: var(--bg2); }
+
+    .status {
+      text-align: center;
+      font-size: 0.95rem;
+      min-height: 22px;
+      font-weight: 600;
+      opacity: 0.85;
+    }
+
+    /* ---- בורר הצלילים ---- */
+    .sound-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border-top: 2px dashed var(--bg2);
+      padding-top: 16px;
+    }
+
+    .sound-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .sound-row label { font-weight: 600; }
+
+    #soundSelect {
+      flex: 1;
+      min-width: 140px;
+      border: none;
+      border-radius: 12px;
+      padding: 9px 12px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+      background: var(--card);
+      box-shadow: inset 0 0 0 2px var(--bg2);
+      cursor: pointer;
+      outline: none;
+    }
+
+    .btn-preview {
+      border: none;
+      border-radius: 12px;
+      padding: 9px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--leaf);
+      color: #fff;
+      transition: filter 0.15s, transform 0.1s;
+      white-space: nowrap;
+    }
+    .btn-preview:hover { filter: brightness(1.08); }
+    .btn-preview:active { transform: scale(0.94); }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .slider-row label {
+      font-weight: 600;
+      width: 42px;
+    }
+    .slider-row input[type=range] {
+      flex: 1;
+      accent-color: var(--tomato);
+      cursor: pointer;
+    }
+    .slider-val {
+      width: 52px;
+      text-align: left;
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      opacity: 0.75;
+    }
+
+    .footer-stats {
+      font-size: 0.85rem;
+      opacity: 0.6;
+      margin-top: 6px;
+      text-align: center;
+    }
+
+    /* ================= תפריט הצד ================= */
+    .menu-toggle {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 30;
+      width: 48px;
+      height: 48px;
+      border: none;
+      border-radius: 14px;
+      background: var(--tomato);
+      color: #fff;
+      font-size: 1.4rem;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(46,125,30,0.3);
+      transition: transform 0.15s, filter 0.15s;
+    }
+    .menu-toggle:hover { filter: brightness(1.08); }
+    .menu-toggle:active { transform: scale(0.92); }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      z-index: 40;
+    }
+    .overlay.show { opacity: 1; pointer-events: auto; }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      right: 0;
+      height: 100%;
+      width: 320px;
+      max-width: 86vw;
+      background: var(--sidebar-bg);
+      box-shadow: -8px 0 30px rgba(0,0,0,0.18);
+      transform: translateX(100%);
+      transition: transform 0.32s cubic-bezier(.4,0,.2,1);
+      z-index: 50;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .sidebar.open { transform: translateX(0); }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .sidebar-header h2 { font-size: 1.2rem; font-weight: 800; }
+    .close-btn {
+      border: none;
+      background: var(--bg2);
+      color: var(--text);
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .close-btn:hover { filter: brightness(0.95); }
+
+    .tool {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: inset 0 0 0 2px var(--bg2);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .tool-title {
+      font-weight: 700;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tool-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .tool small { opacity: 0.65; font-size: 0.8rem; }
+
+    /* מתג הפעלה/כיבוי */
+    .switch { position: relative; width: 50px; height: 28px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .switch .track {
+      position: absolute; inset: 0;
+      background: var(--bg2);
+      border-radius: 999px;
+      transition: background 0.2s;
+      cursor: pointer;
+    }
+    .switch .track::before {
+      content: "";
+      position: absolute;
+      width: 22px; height: 22px;
+      right: 3px; top: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .switch input:checked + .track { background: var(--tomato); }
+    .switch input:checked + .track::before { transform: translateX(-22px); }
+
+    .tool input[type=number] {
+      width: 56px;
+      border: none;
+      border-radius: 10px;
+      padding: 6px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text);
+      background: var(--bg1);
+      box-shadow: inset 0 0 0 2px var(--bg2);
+      outline: none;
+    }
+    .tool select {
+      border: none;
+      border-radius: 10px;
+      padding: 7px 10px;
+      font-weight: 600;
+      color: var(--text);
+      background: var(--bg1);
+      box-shadow: inset 0 0 0 2px var(--bg2);
+      cursor: pointer;
+      outline: none;
+    }
+
+    /* פס התקדמות יעד */
+    .goal-bar {
+      height: 12px;
+      background: var(--bg2);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .goal-bar > div {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--tomato), var(--tomato-dark));
+      border-radius: 999px;
+      transition: width 0.4s;
+    }
+
+    /* רשימת משימות */
+    .task-add { display: flex; gap: 6px; }
+    .task-add input {
+      flex: 1;
+      border: none;
+      border-radius: 10px;
+      padding: 8px;
+      color: var(--text);
+      background: var(--bg1);
+      box-shadow: inset 0 0 0 2px var(--bg2);
+      outline: none;
+    }
+    .task-add button {
+      border: none;
+      border-radius: 10px;
+      width: 38px;
+      background: var(--tomato);
+      color: #fff;
+      font-size: 1.2rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .task-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .task-list li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg1);
+      border-radius: 10px;
+      padding: 8px 10px;
+    }
+    .task-list li.done span { text-decoration: line-through; opacity: 0.5; }
+    .task-list li span { flex: 1; word-break: break-word; }
+    .task-list input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--tomato); cursor: pointer; }
+    .task-del {
+      border: none; background: transparent; cursor: pointer;
+      color: var(--tomato-dark); font-size: 1rem; opacity: 0.6;
+    }
+    .task-del:hover { opacity: 1; }
+
+    .quote-box {
+      font-style: italic;
+      line-height: 1.5;
+      min-height: 48px;
+    }
+    .btn-small {
+      align-self: flex-start;
+      border: none;
+      border-radius: 10px;
+      padding: 6px 12px;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--bg2);
+      color: var(--text);
+    }
+    .btn-small:hover { filter: brightness(0.96); }
+    .btn-danger { background: #fde2dd; color: #b71c1c; }
+    body.dark .btn-danger { background: #4a1f1a; color: #ffb4ab; }
+
+    body { transition: background 0.3s, color 0.3s; }
+
+    /* ================= התאמה לטלפון ================= */
+    /* גופן 16px+ בשדות טקסט מונע "זום" אוטומטי באייפון */
+    .task-add input, #soundSelect, .tool select { font-size: 16px; }
+
+    @media (max-width: 520px) {
+      body { padding: 14px; padding-top: 68px; gap: 6px; justify-content: flex-start; }
+      h1 { font-size: 1.3rem; }
+      .subtitle { font-size: 0.85rem; margin-bottom: 8px; }
+      .panel { padding: 18px 16px; border-radius: 18px; }
+      .menu-toggle { top: 12px; right: 12px; width: 44px; height: 44px; }
+      .presets button { padding: 8px 16px; } /* יעד מגע נוח יותר */
+      .controls button { padding: 15px; }
+      .sidebar { width: 100%; max-width: 100%; }
+    }
+
+    /* מסך נמוך ושכוב — לצמצם רווחים אנכיים */
+    @media (max-height: 560px) and (orientation: landscape) {
+      body { justify-content: flex-start; padding-top: 56px; }
+    }
+  </style>
+</head>
+<body>
+  <button class="menu-toggle" id="menuToggle" aria-label="פתח תפריט">☰</button>
+  <div class="overlay" id="overlay"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>⚙️ כלים ללמידה</h2>
+      <button class="close-btn" id="closeSidebar" aria-label="סגור">✕</button>
+    </div>
+
+    <!-- מצב כהה -->
+    <div class="tool">
+      <div class="tool-row">
+        <span class="tool-title">🌙 מצב כהה</span>
+        <label class="switch">
+          <input type="checkbox" id="darkToggle" />
+          <span class="track"></span>
+        </label>
+      </div>
+      <small>נוח לעיניים בלמידה בלילה</small>
+    </div>
+
+    <!-- יעד יומי -->
+    <div class="tool">
+      <div class="tool-row">
+        <span class="tool-title">🎯 יעד יומי</span>
+        <input type="number" id="goalInput" min="1" max="30" value="4" />
+      </div>
+      <div class="goal-bar"><div id="goalFill"></div></div>
+      <small id="goalText">0 מתוך 4 סבבים</small>
+    </div>
+
+    <!-- הפסקות אוטומטיות -->
+    <div class="tool">
+      <div class="tool-row">
+        <span class="tool-title">☕ הפסקות אוטומטיות</span>
+        <label class="switch">
+          <input type="checkbox" id="breakToggle" />
+          <span class="track"></span>
+        </label>
+      </div>
+      <div class="tool-row">
+        <small>אורך ההפסקה (דקות)</small>
+        <input type="number" id="breakLen" min="1" max="30" value="5" />
+      </div>
+      <small>בסיום סבב למידה יתחיל טיימר הפסקה אוטומטית</small>
+    </div>
+
+    <!-- רעשי רקע -->
+    <div class="tool">
+      <div class="tool-row">
+        <span class="tool-title">🎧 רעש רקע</span>
+        <select id="ambientSelect">
+          <option value="none">ללא</option>
+          <option value="rain">🌧️ גשם</option>
+          <option value="white">📻 רעש לבן</option>
+          <option value="brown">🟤 רעש חום</option>
+          <option value="waves">🌊 גלים</option>
+        </select>
+      </div>
+      <div class="tool-row">
+        <small>עוצמה</small>
+        <input type="range" id="ambientVol" min="0" max="1" step="0.05" value="0.4" style="flex:1; accent-color: var(--tomato);" />
+      </div>
+      <small>מתנגן ברקע בזמן הריכוז ועוזר להתמקד</small>
+    </div>
+
+    <!-- רשימת משימות -->
+    <div class="tool">
+      <span class="tool-title">✅ משימות להיום</span>
+      <div class="task-add">
+        <input type="text" id="taskInput" placeholder="מה ללמוד עכשיו?" maxlength="80" />
+        <button id="taskAdd" aria-label="הוסף">+</button>
+      </div>
+      <ul class="task-list" id="taskList"></ul>
+    </div>
+
+    <!-- ציטוט מוטיבציה -->
+    <div class="tool">
+      <span class="tool-title">💬 מוטיבציה</span>
+      <div class="quote-box" id="quoteBox"></div>
+      <button class="btn-small" id="quoteBtn">ציטוט חדש 🔄</button>
+    </div>
+
+    <!-- איפוס -->
+    <div class="tool">
+      <span class="tool-title">♻️ איפוס נתונים</span>
+      <small>מאפס את ספירת הסבבים והדקות של היום</small>
+      <button class="btn-small btn-danger" id="resetStats">אפס סטטיסטיקה</button>
+    </div>
+  </aside>
+
+  <h1>🍅 פומודורו ללמידה</h1>
+  <div class="subtitle">בחרו כמה זמן להתרכז, ותנו לעגבניה לעבוד בשבילכם</div>
+
+  <div class="tomato-wrap" id="tomatoWrap">
+    <svg class="tomato-svg" viewBox="0 0 200 200" aria-hidden="true">
+      <!-- גוף העגבניה -->
+      <defs>
+        <radialGradient id="tomGrad" cx="38%" cy="32%" r="75%">
+          <stop offset="0%" stop-color="#9ee35a" />
+          <stop offset="55%" stop-color="#5aa82e" />
+          <stop offset="100%" stop-color="#357a1c" />
+        </radialGradient>
+      </defs>
+      <ellipse cx="100" cy="118" rx="82" ry="74" fill="url(#tomGrad)" />
+      <!-- ברק/הבהקה -->
+      <ellipse cx="68" cy="88" rx="22" ry="14" fill="rgba(255,255,255,0.28)" transform="rotate(-25 68 88)" />
+      <!-- עלים -->
+      <g fill="var(--leaf)" stroke="var(--leaf-dark)" stroke-width="1.5">
+        <path d="M100 50 q-14 -22 -34 -20 q14 8 16 22 q-18 -8 -30 2 q18 2 24 14 q-10 0 -16 8 q22 -4 40 -6 z"/>
+        <path d="M100 50 q14 -22 34 -20 q-14 8 -16 22 q18 -8 30 2 q-18 2 -24 14 q10 0 16 8 q-22 -4 -40 -6 z"/>
+      </g>
+      <!-- גבעול -->
+      <rect x="95" y="34" width="10" height="22" rx="5" fill="var(--leaf-dark)" />
+    </svg>
+    <div class="timer-display" id="display">25:00</div>
+  </div>
+
+  <div class="panel">
+    <div class="minutes-row">
+      <div class="field">
+        <label for="minInput">דקות:</label>
+        <div class="stepper">
+          <button id="minus" aria-label="פחות">−</button>
+          <input id="minInput" type="number" min="0" max="180" value="25" />
+          <button id="plus" aria-label="עוד">+</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="secInput">שניות:</label>
+        <div class="stepper">
+          <button id="secMinus" aria-label="פחות">−</button>
+          <input id="secInput" type="number" min="0" max="59" value="0" />
+          <button id="secPlus" aria-label="עוד">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="presets" id="presets">
+      <button data-min="5">5</button>
+      <button data-min="15">15</button>
+      <button data-min="25" class="active">25</button>
+      <button data-min="45">45</button>
+      <button data-min="60">60</button>
+    </div>
+
+    <div class="controls">
+      <button class="btn-primary" id="startBtn">▶ התחל</button>
+      <button class="btn-secondary" id="resetBtn">↺ אפס</button>
+    </div>
+
+    <div class="status" id="status">מוכנים כשתהיו 😊</div>
+
+    <div class="sound-section">
+      <div class="sound-row">
+        <label for="soundSelect">צליל סיום:</label>
+        <select id="soundSelect"></select>
+        <button class="btn-preview" id="previewBtn">▶ נגן</button>
+      </div>
+      <div class="slider-row">
+        <label for="volRange">חוזק</label>
+        <input type="range" id="volRange" min="0" max="1" step="0.05" value="0.3" />
+        <span class="slider-val" id="volVal">30%</span>
+      </div>
+      <div class="slider-row">
+        <label for="durRange">אורך</label>
+        <input type="range" id="durRange" min="0.3" max="4" step="0.1" value="1.5" />
+        <span class="slider-val" id="durVal">1.5 ש'</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-stats" id="stats"></div>
+
+  <script>
+    const display   = document.getElementById('display');
+    const minInput  = document.getElementById('minInput');
+    const minus     = document.getElementById('minus');
+    const plus      = document.getElementById('plus');
+    const secInput  = document.getElementById('secInput');
+    const secMinus  = document.getElementById('secMinus');
+    const secPlus   = document.getElementById('secPlus');
+    const startBtn  = document.getElementById('startBtn');
+    const resetBtn  = document.getElementById('resetBtn');
+    const statusEl  = document.getElementById('status');
+    const presetsEl = document.getElementById('presets');
+    const tomatoWrap= document.getElementById('tomatoWrap');
+    const statsEl   = document.getElementById('stats');
+    const soundSelect = document.getElementById('soundSelect');
+    const previewBtn  = document.getElementById('previewBtn');
+    const volRange    = document.getElementById('volRange');
+    const durRange    = document.getElementById('durRange');
+    const volVal      = document.getElementById('volVal');
+    const durVal      = document.getElementById('durVal');
+
+    // תפריט צד
+    const menuToggle   = document.getElementById('menuToggle');
+    const closeSidebar = document.getElementById('closeSidebar');
+    const sidebar      = document.getElementById('sidebar');
+    const overlay      = document.getElementById('overlay');
+    const darkToggle   = document.getElementById('darkToggle');
+    const goalInput    = document.getElementById('goalInput');
+    const goalFill     = document.getElementById('goalFill');
+    const goalText     = document.getElementById('goalText');
+    const breakToggle  = document.getElementById('breakToggle');
+    const breakLen     = document.getElementById('breakLen');
+    const ambientSelect= document.getElementById('ambientSelect');
+    const ambientVol   = document.getElementById('ambientVol');
+    const taskInput    = document.getElementById('taskInput');
+    const taskAdd      = document.getElementById('taskAdd');
+    const taskList     = document.getElementById('taskList');
+    const quoteBox     = document.getElementById('quoteBox');
+    const quoteBtn     = document.getElementById('quoteBtn');
+    const resetStats   = document.getElementById('resetStats');
+
+    let totalSeconds = 25 * 60;
+    let remaining    = totalSeconds;
+    let timerId      = null;
+    let running      = false;
+    let endTime      = 0; // חישוב מבוסס שעון אמת כדי שיהיה מדויק גם ברקע
+    let onBreak      = false; // האם אנחנו כרגע בהפסקה
+    let focusSeconds = totalSeconds; // אורך סבב הלמידה לשחזור אחרי הפסקה
+
+    // --- מצב למידה היומי (נשמר בדפדפן) ---
+    let sessionsToday = +(localStorage.getItem('pomo_sessions') || 0);
+    let minutesToday  = +(localStorage.getItem('pomo_minutes')  || 0);
+    renderStats();
+
+    function clampMinutes(v) {
+      v = Math.round(v || 0);
+      if (v < 0) v = 0;
+      if (v > 180) v = 180;
+      return v;
+    }
+
+    function readInputs() {
+      // קורא דקות+שניות מהשדות, מנרמל לטווח חוקי, ומחזיר סך שניות (לפחות 1)
+      let m = clampMinutes(+minInput.value);
+      let s = Math.round(+secInput.value || 0);
+      if (s < 0) s = 0;
+      if (s > 59) s = 59;
+      let total = m * 60 + s;
+      if (total < 1) total = 1;
+      return total;
+    }
+
+    function syncInputs() {
+      // מציג את totalSeconds בשדות הדקות/שניות וב-presets
+      const m = Math.floor(totalSeconds / 60);
+      const s = totalSeconds % 60;
+      minInput.value = m;
+      secInput.value = s;
+      [...presetsEl.children].forEach(b =>
+        b.classList.toggle('active', +b.dataset.min * 60 === totalSeconds));
+    }
+
+    function format(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    }
+
+    function render() {
+      display.textContent = format(remaining);
+      document.title = (running ? '▶ ' : '') + format(remaining) + ' 🍅 פומודורו';
+    }
+
+    function setTotal(sec) {
+      totalSeconds = Math.min(180 * 60, Math.max(1, Math.round(sec)));
+      if (!running) { remaining = totalSeconds; render(); }
+      syncInputs();
+    }
+
+    function tick() {
+      remaining = Math.max(0, Math.round((endTime - Date.now()) / 1000));
+      render();
+      if (remaining <= 0) finish();
+    }
+
+    function start() {
+      if (running) { pause(); return; }
+      if (remaining <= 0) remaining = totalSeconds;
+      running = true;
+      endTime = Date.now() + remaining * 1000;
+      timerId = setInterval(tick, 250);
+      startBtn.textContent = '⏸ השהה';
+      statusEl.textContent = 'בהצלחה! ראשים בריכוז 🎯';
+      tomatoWrap.classList.add('running');
+      tomatoWrap.classList.remove('done');
+      // נדרש מחווה של המשתמש כדי להעיר את האודיו
+      ensureAudio();
+      if (!onBreak) startAmbient();
+    }
+
+    function pause() {
+      running = false;
+      clearInterval(timerId);
+      startBtn.textContent = '▶ המשך';
+      statusEl.textContent = 'מושהה ⏸';
+      tomatoWrap.classList.remove('running');
+      stopAmbient();
+      render();
+    }
+
+    function reset() {
+      running = false;
+      clearInterval(timerId);
+      onBreak = false;
+      remaining = totalSeconds;
+      startBtn.textContent = '▶ התחל';
+      statusEl.textContent = 'מוכנים כשתהיו 😊';
+      tomatoWrap.classList.remove('running', 'done');
+      stopAmbient();
+      render();
+    }
+
+    function finish() {
+      running = false;
+      clearInterval(timerId);
+      remaining = 0;
+      render();
+      startBtn.textContent = '▶ התחל';
+      tomatoWrap.classList.remove('running');
+      tomatoWrap.classList.add('done');
+      stopAmbient();
+      playSelected();
+
+      // אם סיימנו הפסקה — חוזרים לסבב למידה רגיל ולא סופרים
+      if (onBreak) {
+        onBreak = false;
+        totalSeconds = focusSeconds;
+        remaining = totalSeconds;
+        syncInputs();
+        render();
+        statusEl.textContent = 'ההפסקה נגמרה — מוכנים לסבב נוסף 🚀';
+        notify('☕ ההפסקה נגמרה', 'בחזרה ללמידה!');
+        return;
+      }
+
+      statusEl.textContent = '🎉 כל הכבוד! סיימתם סבב למידה';
+
+      // עדכון סטטיסטיקה
+      sessionsToday += 1;
+      minutesToday  += Math.round(totalSeconds / 60);
+      localStorage.setItem('pomo_sessions', sessionsToday);
+      localStorage.setItem('pomo_minutes', minutesToday);
+      renderStats();
+      updateGoal();
+      notify('🍅 הזמן נגמר!', 'כל הכבוד, סיימתם סבב למידה 🎉');
+
+      // הפסקה אוטומטית
+      if (breakToggle.checked) startBreak();
+    }
+
+    function startBreak() {
+      focusSeconds = totalSeconds;
+      onBreak = true;
+      const bl = Math.min(30, Math.max(1, Math.round(+breakLen.value || 5)));
+      totalSeconds = bl * 60;
+      remaining = totalSeconds;
+      syncInputs();
+      render();
+      running = true;
+      endTime = Date.now() + remaining * 1000;
+      timerId = setInterval(tick, 250);
+      startBtn.textContent = '⏸ השהה';
+      statusEl.textContent = `☕ הפסקה של ${bl} דק' — קצת אוויר 🌿`;
+      tomatoWrap.classList.add('running');
+      tomatoWrap.classList.remove('done');
+    }
+
+    function notify(title, body) {
+      if (window.Notification && Notification.permission === 'granted') {
+        new Notification(title, { body });
+      }
+    }
+
+    function renderStats() {
+      statsEl.textContent = `היום: ${sessionsToday} סבבים · ${minutesToday} דקות למידה`;
+    }
+
+    // ---- צליל כיפי עם Web Audio (בלי קבצים חיצוניים) ----
+    let audioCtx = null;
+    function ensureAudio() {
+      if (!audioCtx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (AC) audioCtx = new AC();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    // צליל בודד (יחידת בניין לכל הצלילים)
+    function tone(t0, freq, dur, vol, type = 'sine', glideTo = null) {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t0);
+      if (glideTo) osc.frequency.exponentialRampToValueAtTime(glideTo, t0 + dur);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.linearRampToValueAtTime(vol, t0 + Math.min(0.03, dur * 0.2));
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.connect(g).connect(audioCtx.destination);
+      osc.start(t0);
+      osc.stop(t0 + dur + 0.05);
+    }
+
+    // עשרה צלילים. כל אחד מקבל (t0, vol, dur) ומתפרס על פני dur שניות.
+    const SOUNDS = [
+      { id: 'bell', name: '🔔 פעמון קלאסי', play(t0, v, d) {
+          const n = [523.25, 659.25, 783.99, 1046.5];
+          const s = d / (n.length + 0.6);
+          n.forEach((f, i) => tone(t0 + i * s, f, Math.max(0.4, s * 2.2), v, 'triangle'));
+          tone(t0 + n.length * s, 1318.5, Math.max(0.6, d * 0.5), v, 'sine');
+      }},
+      { id: 'beep', name: '📟 ביפ', play(t0, v, d) {
+          const s = d / 3;
+          for (let i = 0; i < 3; i++) tone(t0 + i * s, 880, s * 0.55, v, 'square');
+      }},
+      { id: 'ding', name: '🛎️ דינג', play(t0, v, d) {
+          tone(t0, 880, d, v, 'sine');
+          tone(t0, 1760, d * 0.6, v * 0.4, 'sine');
+      }},
+      { id: 'marimba', name: '🪵 מרימבה', play(t0, v, d) {
+          const sc = [523, 587, 659, 784, 880];
+          const s = d / sc.length;
+          sc.forEach((f, i) => tone(t0 + i * s, f, s * 1.6, v, 'triangle'));
+      }},
+      { id: 'chip', name: '🎮 8-ביט', play(t0, v, d) {
+          const arp = [523, 659, 784, 1046];
+          const steps = 8, s = d / steps;
+          for (let i = 0; i < steps; i++) tone(t0 + i * s, arp[i % arp.length] * (i < 4 ? 1 : 2), s * 0.85, v, 'square');
+      }},
+      { id: 'gong', name: '🥁 גונג', play(t0, v, d) {
+          tone(t0, 110, d, v, 'sine');
+          tone(t0, 110 * 1.5, d * 0.8, v * 0.6, 'triangle');
+          tone(t0, 110 * 2.01, d * 0.6, v * 0.4, 'sine');
+      }},
+      { id: 'whistle', name: '🎵 שריקה עולה', play(t0, v, d) {
+          tone(t0, 400, d, v, 'sine', 1900);
+      }},
+      { id: 'doorbell', name: '🚪 דינג-דונג', play(t0, v, d) {
+          tone(t0, 659.25, d * 0.5, v, 'sine');
+          tone(t0 + d * 0.45, 523.25, d * 0.55, v, 'sine');
+      }},
+      { id: 'sparkle', name: '✨ נצנוצים', play(t0, v, d) {
+          const n = 7, s = d / n;
+          for (let i = 0; i < n; i++) {
+            const f = 1046.5 * Math.pow(1.18, (i % 2 ? i : -i / 2));
+            tone(t0 + i * s, f, s * 1.4, v * (1 - i / (n * 2)), 'sine');
+          }
+      }},
+      { id: 'fanfare', name: '🎉 חצוצרת ניצחון', play(t0, v, d) {
+          const chord = [523.25, 659.25, 783.99];
+          chord.forEach(f => tone(t0, f, d * 0.6, v * 0.7, 'sawtooth'));
+          tone(t0 + d * 0.45, 1046.5, d * 0.55, v, 'sawtooth');
+      }},
+    ];
+
+    function currentSound() {
+      return SOUNDS.find(s => s.id === soundSelect.value) || SOUNDS[0];
+    }
+
+    function playSelected() {
+      ensureAudio();
+      if (!audioCtx) return;
+      const vol = parseFloat(volRange.value);
+      const dur = parseFloat(durRange.value);
+      currentSound().play(audioCtx.currentTime + 0.02, vol, dur);
+    }
+
+    // ---- אירועים ----
+    startBtn.addEventListener('click', start);
+    resetBtn.addEventListener('click', reset);
+
+    // כפתורי דקות
+    minus.addEventListener('click', () => setTotal(readInputs() - 60));
+    plus .addEventListener('click', () => setTotal(readInputs() + 60));
+    // כפתורי שניות — עם גלילה (59+1 → דקה, 0−1 → 59 בדקה הקודמת)
+    secMinus.addEventListener('click', () => setTotal(readInputs() - 1));
+    secPlus .addEventListener('click', () => setTotal(readInputs() + 1));
+
+    // הקלדה ידנית בשני השדות
+    minInput.addEventListener('change', () => setTotal(readInputs()));
+    secInput.addEventListener('change', () => setTotal(readInputs()));
+    [minInput, secInput].forEach(inp => inp.addEventListener('input', () => {
+      if (!running) { totalSeconds = readInputs(); remaining = totalSeconds; render(); }
+    }));
+
+    presetsEl.addEventListener('click', e => {
+      if (e.target.dataset.min) { setTotal(+e.target.dataset.min * 60); }
+    });
+
+    // מקש רווח = התחל/השהה
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
+        e.preventDefault();
+        start();
+      }
+    });
+
+    // ---- בורר הצלילים ----
+    // מילוי הרשימה
+    SOUNDS.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = s.name;
+      soundSelect.appendChild(opt);
+    });
+
+    // טעינת העדפות שמורות
+    soundSelect.value = localStorage.getItem('pomo_sound') || 'bell';
+    if (!currentSound()) soundSelect.value = 'bell';
+    volRange.value = localStorage.getItem('pomo_vol') || '0.3';
+    durRange.value = localStorage.getItem('pomo_dur') || '1.5';
+
+    function updateLabels() {
+      volVal.textContent = Math.round(parseFloat(volRange.value) * 100) + '%';
+      durVal.textContent = parseFloat(durRange.value).toFixed(1) + ' ש\'';
+    }
+    updateLabels();
+
+    soundSelect.addEventListener('change', () => {
+      localStorage.setItem('pomo_sound', soundSelect.value);
+      playSelected(); // תצוגה מקדימה מיידית בבחירה
+    });
+    volRange.addEventListener('input', () => { updateLabels(); localStorage.setItem('pomo_vol', volRange.value); });
+    durRange.addEventListener('input', () => { updateLabels(); localStorage.setItem('pomo_dur', durRange.value); });
+    previewBtn.addEventListener('click', playSelected);
+
+    // =================== תפריט הצד ===================
+
+    // --- פתיחה/סגירה ---
+    function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('show'); }
+    function closeSide()   { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+    menuToggle.addEventListener('click', openSidebar);
+    closeSidebar.addEventListener('click', closeSide);
+    overlay.addEventListener('click', closeSide);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSide(); });
+
+    // --- מצב כהה ---
+    function applyDark() { document.body.classList.toggle('dark', darkToggle.checked); }
+    darkToggle.checked = localStorage.getItem('pomo_dark') === '1';
+    applyDark();
+    darkToggle.addEventListener('change', () => {
+      applyDark();
+      localStorage.setItem('pomo_dark', darkToggle.checked ? '1' : '0');
+    });
+
+    // --- יעד יומי ---
+    function updateGoal() {
+      let goal = Math.min(30, Math.max(1, Math.round(+goalInput.value || 1)));
+      const pct = Math.min(100, (sessionsToday / goal) * 100);
+      goalFill.style.width = pct + '%';
+      const reached = sessionsToday >= goal;
+      goalText.textContent = reached
+        ? `🏆 כל הכבוד! השגתם את היעד (${sessionsToday}/${goal})`
+        : `${sessionsToday} מתוך ${goal} סבבים`;
+    }
+    goalInput.value = localStorage.getItem('pomo_goal') || '4';
+    goalInput.addEventListener('input', () => {
+      localStorage.setItem('pomo_goal', goalInput.value);
+      updateGoal();
+    });
+    updateGoal();
+
+    // --- הפסקות אוטומטיות (שמירת העדפות) ---
+    breakToggle.checked = localStorage.getItem('pomo_break') === '1';
+    breakLen.value = localStorage.getItem('pomo_breaklen') || '5';
+    breakToggle.addEventListener('change', () => localStorage.setItem('pomo_break', breakToggle.checked ? '1' : '0'));
+    breakLen.addEventListener('input', () => localStorage.setItem('pomo_breaklen', breakLen.value));
+
+    // --- רעשי רקע (Web Audio) ---
+    let ambientNodes = null;
+    function makeNoiseBuffer(brown) {
+      const len = audioCtx.sampleRate * 2;
+      const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+      const data = buf.getChannelData(0);
+      let last = 0;
+      for (let i = 0; i < len; i++) {
+        const w = Math.random() * 2 - 1;
+        if (brown) { last = (last + 0.02 * w) / 1.02; data[i] = last * 3.5; }
+        else { data[i] = w; }
+      }
+      return buf;
+    }
+    function startAmbient() {
+      stopAmbient();
+      const type = ambientSelect.value;
+      if (type === 'none') return;
+      ensureAudio();
+      if (!audioCtx) return;
+      const src = audioCtx.createBufferSource();
+      src.buffer = makeNoiseBuffer(type === 'brown' || type === 'waves');
+      src.loop = true;
+      const gain = audioCtx.createGain();
+      gain.gain.value = parseFloat(ambientVol.value) * 0.7;
+      let head = src;
+      if (type === 'rain') {
+        const bp = audioCtx.createBiquadFilter();
+        bp.type = 'bandpass'; bp.frequency.value = 1400; bp.Q.value = 0.6;
+        src.connect(bp); head = bp;
+      } else if (type === 'white') {
+        const lp = audioCtx.createBiquadFilter();
+        lp.type = 'lowpass'; lp.frequency.value = 9000;
+        src.connect(lp); head = lp;
+      }
+      head.connect(gain).connect(audioCtx.destination);
+      let lfo = null;
+      if (type === 'waves') {
+        lfo = audioCtx.createOscillator();
+        lfo.frequency.value = 0.15;
+        const lg = audioCtx.createGain();
+        lg.gain.value = parseFloat(ambientVol.value) * 0.45;
+        lfo.connect(lg).connect(gain.gain);
+        lfo.start();
+      }
+      src.start();
+      ambientNodes = { src, gain, lfo };
+    }
+    function stopAmbient() {
+      if (!ambientNodes) return;
+      try { ambientNodes.src.stop(); } catch (e) {}
+      try { if (ambientNodes.lfo) ambientNodes.lfo.stop(); } catch (e) {}
+      ambientNodes = null;
+    }
+    ambientSelect.value = localStorage.getItem('pomo_ambient') || 'none';
+    ambientVol.value = localStorage.getItem('pomo_ambientvol') || '0.4';
+    ambientSelect.addEventListener('change', () => {
+      localStorage.setItem('pomo_ambient', ambientSelect.value);
+      if (running && !onBreak) startAmbient(); // החלפה תוך כדי ריצה
+      else if (ambientNodes) stopAmbient();
+    });
+    ambientVol.addEventListener('input', () => {
+      localStorage.setItem('pomo_ambientvol', ambientVol.value);
+      if (ambientNodes) ambientNodes.gain.gain.value = parseFloat(ambientVol.value) * 0.7;
+    });
+
+    // --- רשימת משימות ---
+    let tasks = [];
+    try { tasks = JSON.parse(localStorage.getItem('pomo_tasks') || '[]'); } catch (e) { tasks = []; }
+    function saveTasks() { localStorage.setItem('pomo_tasks', JSON.stringify(tasks)); }
+    function renderTasks() {
+      taskList.innerHTML = '';
+      tasks.forEach((t, i) => {
+        const li = document.createElement('li');
+        if (t.done) li.classList.add('done');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.checked = t.done;
+        cb.addEventListener('change', () => { tasks[i].done = cb.checked; saveTasks(); renderTasks(); });
+        const span = document.createElement('span');
+        span.textContent = t.text;
+        const del = document.createElement('button');
+        del.className = 'task-del'; del.textContent = '🗑';
+        del.addEventListener('click', () => { tasks.splice(i, 1); saveTasks(); renderTasks(); });
+        li.append(cb, span, del);
+        taskList.appendChild(li);
+      });
+    }
+    function addTask() {
+      const text = taskInput.value.trim();
+      if (!text) return;
+      tasks.push({ text, done: false });
+      taskInput.value = '';
+      saveTasks(); renderTasks();
+    }
+    taskAdd.addEventListener('click', addTask);
+    taskInput.addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+    renderTasks();
+
+    // --- ציטוטי מוטיבציה ---
+    const QUOTES = [
+      'ההצלחה היא סכום של מאמצים קטנים שחוזרים על עצמם יום אחר יום.',
+      'אל תפסיקו כשאתם עייפים — תפסיקו כשסיימתם.',
+      'הדרך היחידה לעשות עבודה נהדרת היא לאהוב את מה שאתם עושים.',
+      'כל מומחה היה פעם מתחיל.',
+      'משמעת היא הגשר בין מטרות להישגים.',
+      'דקה של ריכוז שווה שעה של פיזור.',
+      'לא צריך להיות מושלם — צריך רק להתחיל.',
+      'הצעד הקטן של היום הוא הקפיצה הגדולה של מחר.',
+      'הידע הוא ההשקעה היחידה שמחזירה תמיד.',
+      'מי שלא מוותר — מנצח.',
+      'התרכזו בהתקדמות, לא בשלמות.',
+      'גם מסע של אלף קילומטר מתחיל בצעד אחד.',
+    ];
+    function newQuote() {
+      const i = Math.floor(Math.random() * QUOTES.length);
+      quoteBox.textContent = '"' + QUOTES[i] + '"';
+    }
+    quoteBtn.addEventListener('click', newQuote);
+    newQuote();
+
+    // --- איפוס סטטיסטיקה ---
+    resetStats.addEventListener('click', () => {
+      sessionsToday = 0;
+      minutesToday = 0;
+      localStorage.setItem('pomo_sessions', 0);
+      localStorage.setItem('pomo_minutes', 0);
+      renderStats();
+      updateGoal();
+    });
+
+    // בקשת רשות להתראות (לא חובה)
+    if (window.Notification && Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {});
+    }
+
+    setTotal(25 * 60);
+    render();
+  </script>
+</body>
+</html>
